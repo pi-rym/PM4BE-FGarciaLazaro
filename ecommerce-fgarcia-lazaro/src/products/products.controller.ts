@@ -1,14 +1,15 @@
 import { Controller, Get } from '@nestjs/common';
 import { ProductsService } from './products.service';
+import { Products } from './products.repository';
 
 @Controller('products')
 export class ProductsController {
-    constructor(private readonly ProductsService : ProductsService){}
+    constructor(private readonly productsService : ProductsService){}
 
     @Get()
-    findAll(){
-        this.ProductsService.findAll()
-        return "Se llamo al endpoint de products"
-    }
+    getAllProducts() : Products[]{
+            return this.productsService.getAllProducts() ;
+             
+        }
     
 }
