@@ -1,8 +1,10 @@
 import { Injectable } from "@nestjs/common";
+import { Users } from "./users.interface";
+
 
 const users: Users[] = [
   {
-    id: "usr-101",
+    id: "1",
     email: "carlos.mendoza@email.com",
     name: "Carlos Mendoza",
     password: "Password123!",
@@ -12,7 +14,7 @@ const users: Users[] = [
     city: "Buenos Aires"
   },
   {
-    id: "usr-102",
+    id: "2",
     email: "ana.garcia@email.com",
     name: "Ana García",
     password: "SecurePass456#",
@@ -22,7 +24,7 @@ const users: Users[] = [
     city: "Madrid"
   },
   {
-    id: "usr-103",
+    id: "3",
     email: "john.doe@email.com",
     name: "John Doe",
     password: "MySecretPass789$",
@@ -32,7 +34,7 @@ const users: Users[] = [
     city: "Springfield"
   },
   {
-    id: "usr-104",
+    id: "4",
     email: "mariana.silva@email.com",
     name: "Mariana Silva",
     password: "P@ssword2024",
@@ -42,7 +44,7 @@ const users: Users[] = [
     city: "São Paulo"
   },
   {
-    id: "usr-105",
+    id: "5",
     email: "luis.hernandez@email.com",
     name: "Luis Hernández",
     password: "ClaveSegura321!",
@@ -51,7 +53,7 @@ const users: Users[] = [
     // Sin country ni city (propiedades opcionales)
   },
   {
-    id: "usr-106",
+    id: "6",
     email: "camila.torres@email.com",
     name: "Camila Torres",
     password: "UserPass55!",
@@ -61,7 +63,7 @@ const users: Users[] = [
     // Sin country
   },
   {
-    id: "usr-107",
+    id: "7",
     email: "sofia.lopez@email.com",
     name: "Sofía López",
     password: "S0fiaPass99*",
@@ -71,7 +73,7 @@ const users: Users[] = [
     city: "Bogotá"
   },
   {
-    id: "usr-108",
+    id: "8",
     email: "david.smith@email.com",
     name: "David Smith",
     password: "DavidSafePass!1",
@@ -81,7 +83,7 @@ const users: Users[] = [
     // Sin city
   },
   {
-    id: "usr-109",
+    id: "9",
     email: "lucia.martinez@email.com",
     name: "Lucía Martínez",
     password: "LuMart2024#",
@@ -91,7 +93,7 @@ const users: Users[] = [
     city: "Lima"
   },
   {
-    id: "usr-110",
+    id: "10",
     email: "mateo.rodriguez@email.com",
     name: "Mateo Rodríguez",
     password: "MatPass88!",
@@ -101,7 +103,7 @@ const users: Users[] = [
     city: "Montevideo"
   },
   {
-    id: "usr-111",
+    id: "11",
     email: "valentina.gomez@email.com",
     name: "Valentina Gómez",
     password: "ValGomez#4321",
@@ -111,7 +113,7 @@ const users: Users[] = [
     city: "Guadalajara"
   },
   {
-    id: "usr-112",
+    id: "12",
     email: "gabriel.fischer@email.com",
     name: "Gabriel Fischer",
     password: "GabiPass999!",
@@ -122,20 +124,28 @@ const users: Users[] = [
   }
 ];
 
-export interface Users {
-id: string;
-  email: string;
-  name: string;
-  password: string;
-  address: string;
-  phone: string;
-  country?: string;
-  city?: string;
-}
-
 @Injectable()
 export class UserRepository {
+    
+    
+
 getAllUsers(){
         return users;
     }
+
+    getUserById(id: string) {
+    return users.map(usr=> usr.id === id);
+}
+createNewUser(user) {
+        
+    }
+
+    updateProfile(id: string, userProfileUpdate: any) {
+        
+    }
+
+    deleteUserById(id: string) {
+        
+    }
+    
 }

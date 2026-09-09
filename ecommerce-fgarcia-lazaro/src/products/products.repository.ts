@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Products } from "./products.interfaces";
 
 const products : Products[] = [
   {
@@ -99,18 +100,29 @@ const products : Products[] = [
   }
 ];
 
-export interface Products {
-id: string
-name: string
-description: string
-price: number
-stock: number
-imgUrl: string 
-}
+
 
 @Injectable()
 export class ProductsRepository {
+
+
+
+
 getAllProducts() : Products[]{
     return products;
+}
+
+getProductById(id: string) {
+    
+}
+
+addNewProduct(product: any) {
+    
+}
+updateProduct(id: string, editProduct: any) {
+    
+}
+deleteProduct(id: string) {
+    
 }
 }
