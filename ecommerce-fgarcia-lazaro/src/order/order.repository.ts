@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isUUID } from 'class-validator';
 import { OrderDetails } from 'src/order/entities/orderdetails.entity';
@@ -6,6 +6,9 @@ import { Orders } from 'src/order/entities/orders.entity';
 import { Products } from 'src/products/entities/products.entity';
 import { Users } from 'src/users/entities/users.entity';
 import { Status } from 'src/common/enums/status.enum';
+import { OrderStatus } from 'src/common/enums/order-status.enum';
+import { Role } from 'src/common/enums/roles.enum';
+import { AuthUser } from 'src/auth/interfaces/auth-request.interface';
 import { In, MoreThan, Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/order.dto';
 
@@ -20,10 +23,16 @@ export class OrdersRepository {
     private ormProductsRepository: Repository<Products>,
   ) {}
 
-  async getOrderById(id: string): Promise<Orders> {
+  // El usuario que hizo la orden o un admin:
+  private isOwnerOrAdmin(ownerId: string | undefined, requester: AuthUser): boolean {
+    return ownerId === requester.id || requester.roles.includes(Role.ADMIN);
+  }
+
+  async getOrderById(id: string, requester: AuthUser): Promise<Omit<Orders, 'user'>> {
     const order = await this.ormOrdersRepository.findOne({
       where: { id },
       relations: {
+        user: true,
         orderDetails: {
           products: true,
         },
@@ -33,11 +42,16 @@ export class OrdersRepository {
     if (!order) {
       throw new NotFoundException(`Orden con id ${id} no encontrada`);
     }
+    if (!this.isOwnerOrAdmin(order.user?.id, requester)) {
+      throw new ForbiddenException('Solo el usuario que hizo la orden o un admin pueden verla');
+    }
 
-    return order;
+    // El usuario se cargó solo para saber quién es el dueño; no se devuelve porque trae su contraseña:
+    const { user, ...orderWithoutUser } = order;
+    return orderWithoutUser;
   }
 
-  async addOrder(newOrderData: CreateOrderDto): Promise<Orders[]> {
+  async addOrder(newOrderData: CreateOrderDto, requester: AuthUser): Promise<Orders[]> {
     // 1. Desestructuramos la información recibida:
     const { userId, products } = newOrderData;
 
@@ -50,7 +64,10 @@ export class OrdersRepository {
       throw new BadRequestException('La orden no puede repetir productos');
     }
 
-    // 3. Verificamos que exista el Usuario:
+    // 3. Un usuario solo puede comprar a su nombre (un admin puede hacerlo por otro) y tiene que existir:
+    if (userId !== requester.id && !requester.roles.includes(Role.ADMIN)) {
+      throw new ForbiddenException('Solo puedes crear órdenes a tu nombre');
+    }
     const user = await this.ormUsersRepository.findOneBy({ id: userId, status: Status.ENABLE });
     if (!user) {
       throw new NotFoundException(`Usuario con id ${userId} no encontrado`);
@@ -114,5 +131,47 @@ export class OrdersRepository {
         },
       },
     });
+  }
+
+  async cancelOrder(id: string, requester: AuthUser): Promise<Omit<Orders, 'user'>> {
+    const order = await this.ormOrdersRepository.findOne({
+      where: { id },
+      relations: {
+        user: true,
+        orderDetails: {
+          products: true,
+        },
+      },
+    });
+    if (!order) {
+      throw new NotFoundException(`Orden con id ${id} no encontrada`);
+    }
+    if (!this.isOwnerOrAdmin(order.user?.id, requester)) {
+      throw new ForbiddenException('Solo el usuario que hizo la orden o un admin pueden cancelarla');
+    }
+    if (order.status === OrderStatus.CANCELLED) {
+      throw new ConflictException(`La orden con id ${id} ya fue cancelada`);
+    }
+
+    const productIds = (order.orderDetails?.products ?? []).map((product) => product.id);
+
+    await this.ormOrdersRepository.manager.transaction(async (manager) => {
+      // Solo se cancela si sigue activa; si otra petición la canceló justo antes, se deshace todo:
+      const { affected } = await manager.update(
+        Orders,
+        { id, status: OrderStatus.ACTIVE },
+        { status: OrderStatus.CANCELLED },
+      );
+      if (affected !== 1) {
+        throw new ConflictException(`La orden con id ${id} ya fue cancelada`);
+      }
+
+      // Devolvemos al stock la unidad de cada producto de la orden:
+      if (productIds.length) {
+        await manager.update(Products, { id: In(productIds) }, { stock: () => 'stock + 1' });
+      }
+    });
+
+    return this.getOrderById(id, requester);
   }
 }

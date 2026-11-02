@@ -24,8 +24,13 @@ export class CreateProductDto implements Omit<Products, 'id' | 'imgUrl'> {
   @IsOptional()
   @IsUrl()
   imgUrl?: string;
+
+  // Nombre de una categoría existente, por ejemplo "mouse" (ver GET /categories):
+  @IsString({ message: 'La categoría debe ser un texto' })
+  @IsNotEmpty({ message: 'La categoría es obligatoria' })
+  category!: string;
 }
 
 export class UpdateProductDto extends PartialType(
-  OmitType(CreateProductDto, ['name'] as const),
+  OmitType(CreateProductDto, ['name', 'category'] as const),
 ) {}

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from './users.repository';
 import { Users } from './users.interface';
-import { ChangePasswordDto, CreateUserDto, UpdateUserDto } from './dto/users.dto';
+import { ChangePasswordDto, UpdateUserDto } from './dto/users.dto';
+import { AuthUser } from 'src/auth/interfaces/auth-request.interface';
 
 @Injectable()
 export class UsersService {
@@ -19,21 +20,18 @@ export class UsersService {
         return this.userRepository.addUsers()
     }
 
-    getUserById(id: string) {
-        return this.userRepository.getUserById(id)
+    getUserById(id: string, requester: AuthUser) {
+        return this.userRepository.getUserById(id, requester)
     }
-    createNewUser(user: CreateUserDto) {
-        return this.userRepository.createNewUser(user)
-    }
-updateProfile(id: string, userProfileUpdate: UpdateUserDto) {
-       return this.userRepository.updateProfile(id, userProfileUpdate)
+updateProfile(id: string, userProfileUpdate: UpdateUserDto, requester: AuthUser) {
+       return this.userRepository.updateProfile(id, userProfileUpdate, requester)
     }
 
-    changePassword(id: string, passwords: ChangePasswordDto) {
-       return this.userRepository.changePassword(id, passwords)
+    changePassword(id: string, passwords: ChangePasswordDto, requester: AuthUser) {
+       return this.userRepository.changePassword(id, passwords, requester)
     }
-    
-    deleteUserById(id: string) {
-       return this.userRepository.deleteUserById(id)
+
+    deleteUserById(id: string, requester: AuthUser) {
+       return this.userRepository.deleteUserById(id, requester)
     }
 }

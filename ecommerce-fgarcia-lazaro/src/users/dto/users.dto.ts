@@ -1,6 +1,7 @@
-import { IsEmail, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, Matches, Max, MaxLength, MinLength, minLength } from 'class-validator';
+import { IsEmail, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, Matches, Max, MaxLength, MinLength, minLength, Validate } from 'class-validator';
 import { Users } from '../users.interface';
 import { OmitType, PartialType, PickType } from '@nestjs/mapped-types';
+import { MatchPassword } from 'src/common/validators/match-password.validator';
 
 export class CreateUserDto implements Omit<Users, 'id'> {
   @IsEmail({}, { message: 'El email debe tener un formato válido, por eje: nombre@dominio.com' })
@@ -20,6 +21,11 @@ email!: string;
   @MaxLength(15, {message: "Contraseña no mas de 15 caracteres"})
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/, {message: "Contraseña debe tener al menos una minuscula, una mayuscula, un numero y uno de estos caracteres: !@#$%^&*"})
   password!: string;
+
+  @IsString({message: "Confirmacion de contraseña debe ser string"})
+  @IsNotEmpty({message: "Confirmacion de contraseña es obligatoria"})
+  @Validate(MatchPassword)
+  confirmPassword!: string;
 
   @IsString({message: "Direccion debe ser string"})
   @MinLength(3, {message: "Direccion de al menos 3 caracteres"})
@@ -44,7 +50,7 @@ email!: string;
 }
 
 export class UpdateUserDto extends PartialType(
-  OmitType(CreateUserDto, ['email', 'name', 'password'] as const),
+  OmitType(CreateUserDto, ['email', 'name', 'password', 'confirmPassword'] as const),
 ) {}
 
 export class LoginUserDto extends PickType(CreateUserDto, ['email', 'password'] as const) {}

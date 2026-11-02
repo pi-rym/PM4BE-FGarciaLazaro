@@ -11,6 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoriesModule } from './categories/categories.module';
 import { CategoriesService } from './categories/categories.service';
 import { ProductsService } from './products/products.service';
+import { UsersService } from './users/users.service';
 import { FileUploadModule } from './file-upload/file-upload.module';
 
 @Module({
@@ -20,11 +21,13 @@ import { FileUploadModule } from './file-upload/file-upload.module';
   
 })
 export class AppModule implements OnApplicationBootstrap {
-  constructor(private readonly categoriesService :CategoriesService, private readonly productsService: ProductsService){}
+  constructor(private readonly categoriesService :CategoriesService, private readonly productsService: ProductsService, private readonly usersService: UsersService){}
  async onApplicationBootstrap() {
     await  this.categoriesService.addCategories()
         console.log("Categorias cargadas")
     await this.productsService.addProducts()
        console.log("Productos cargados")
+    await this.usersService.addUsers()
+       console.log("Usuarios cargados")
   }
 }

@@ -1,9 +1,11 @@
 import { allProducts } from 'src/utils/data';
 import { Categories } from 'src/categories/entities/categories.entity';
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Products as ProductEntity } from 'src/products/entities/products.entity';
 import { Status } from 'src/common/enums/status.enum';
+import { Role } from 'src/common/enums/roles.enum';
+import { AuthUser } from 'src/auth/interfaces/auth-request.interface';
 import { Repository } from 'typeorm';
 import { Products } from './products.interfaces';
 import { CreateProductDto, UpdateProductDto } from './dto/products.dto';
@@ -45,9 +47,12 @@ export class ProductsRepository {
     return productFound;
   }
 
-  async addNewProduct(product: CreateProductDto) {
+  async addNewProduct(product: CreateProductDto, userId: string) {
     const existingProduct = await this.ormProductsRepository.findOneBy({ name: product.name });
     if (existingProduct) throw new ConflictException(`Ya existe un producto con el nombre: ${product.name}`);
+
+    const category = await this.ormCategoriesRepository.findOneBy({ name: product.category });
+    if (!category) throw new NotFoundException(`La categoría ${product.category} no existe`);
 
     const newProduct = this.ormProductsRepository.create({
       name: product.name,
@@ -55,6 +60,9 @@ export class ProductsRepository {
       price: product.price,
       stock: product.stock,
       imgUrl: product.imgUrl,
+      category,
+      // Se guarda quién lo cargó, para saber después quién puede eliminarlo:
+      user: { id: userId },
     });
 
     await this.ormProductsRepository.save(newProduct);
@@ -102,9 +110,19 @@ export class ProductsRepository {
     return `Se actualiza el producto con id: ${id}`;
   }
 
-  async deleteProduct(id: string) {
-    const productFound = await this.verifyProductExist(id);
+  async deleteProduct(id: string, requester: AuthUser) {
+    const productFound = await this.ormProductsRepository.findOne({
+      where: { id, status: Status.ENABLE },
+      relations: { user: true },
+    });
     if (!productFound) throw new NotFoundException(`No se encontró el producto: ${id}`);
+
+    // Solo lo puede eliminar el usuario que lo cargó o un admin:
+    const isOwner = productFound.user?.id === requester.id;
+    const isAdmin = requester.roles.includes(Role.ADMIN);
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenException('Solo el usuario que cargó el producto o un admin pueden eliminarlo');
+    }
 
     await this.ormProductsRepository.update(id, { status: Status.DISABLE });
     return `Se elimina el producto con id: ${id}`;

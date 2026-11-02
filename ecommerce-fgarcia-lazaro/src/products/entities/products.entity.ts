@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Categories } from '../../categories/entities/categories.entity';
 import { OrderDetails } from '../../order/entities/orderdetails.entity';
+import { Users } from '../../users/entities/users.entity';
 import { Status } from '../../common/enums/status.enum';
 
 @Entity({ name: 'products' })
@@ -32,4 +33,9 @@ export class Products {
 
   @ManyToMany(() => OrderDetails, (orderDetail) => orderDetail.products)
   orderDetails!: OrderDetails[];
+
+  // Usuario que cargó el producto; los del seeder no tienen:
+  @ManyToOne(() => Users, { nullable: true })
+  @JoinColumn({ name: 'user_id' })
+  user!: Users | null;
 }

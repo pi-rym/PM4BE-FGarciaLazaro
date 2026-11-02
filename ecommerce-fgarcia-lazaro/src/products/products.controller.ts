@@ -1,5 +1,11 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, Put, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, Put, Delete, Req, UseGuards } from '@nestjs/common';
 import { ProductsService } from './products.service';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+// "import type" porque es solo un tipo y se usa en un parámetro con decorador (lo pide isolatedModules):
+import type { AuthRequest } from 'src/auth/interfaces/auth-request.interface';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'src/common/enums/roles.enum';
 import { Products } from './products.interfaces';
 import { CreateProductDto, UpdateProductDto } from './dto/products.dto';
 
@@ -32,17 +38,21 @@ export class ProductsController {
     }
 
     @Post()
-    addNewProduct(@Body() product: CreateProductDto){
-      return  this.productsService.addNewProduct(product)
+    @UseGuards(AuthGuard)
+    addNewProduct(@Body() product: CreateProductDto, @Req() request: AuthRequest){
+      return  this.productsService.addNewProduct(product, request.user.id)
     }
 
     @Put(":id")
+    @Roles(Role.ADMIN)
+    @UseGuards(AuthGuard, RolesGuard)
     updateProduct(@Param("id", ParseUUIDPipe) id:string , @Body() editProduct: UpdateProductDto){
  return this.productsService.updateProduct(id, editProduct)
     }
     
     @Delete(":id")
-    deleteProduct(@Param("id", ParseUUIDPipe) id: string){
-      return  this.productsService.deleteProduct(id)
+    @UseGuards(AuthGuard)
+    deleteProduct(@Param("id", ParseUUIDPipe) id: string, @Req() request: AuthRequest){
+      return  this.productsService.deleteProduct(id, request.user)
     }
 }
