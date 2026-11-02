@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ProductsRepository } from './products.repository';
 import { Products } from './products.interfaces';
+import { CreateProductDto, UpdateProductDto } from './dto/products.dto';
 
 @Injectable()
 export class ProductsService {
@@ -9,21 +10,25 @@ export class ProductsService {
     
     constructor(private readonly productsRepository: ProductsRepository) {}
     
-    getAllProducts() : Products[]{
-        return this.productsRepository.getAllProducts();
-        
-    }
-    getProductById(id: string) {
-        this.productsRepository.getProductById(id);
-    }
-    addNewProduct(product: any) {
-        this.productsRepository.addNewProduct(product);
+    getAllProducts(validPage: number, validLimit: number) : Promise<Products[]>{
+        return this.productsRepository.getAllProducts(validPage, validLimit);
+
     }
 
-    updateProduct(id: string, editProduct: any) {
-        this.productsRepository.updateProduct(id, editProduct)
+     addProducts() {
+       return this.productsRepository.addProducts();
+    }
+    getProductById(id: string) {
+       return this.productsRepository.getProductById(id);
+    }
+    addNewProduct(product: CreateProductDto) {
+       return this.productsRepository.addNewProduct(product);
+    }
+
+    updateProduct(id: string, editProduct: UpdateProductDto) {
+       return this.productsRepository.updateProduct(id, editProduct)
     }
     deleteProduct(id: string) {
-        this.productsRepository. deleteProduct(id)
+       return this.productsRepository. deleteProduct(id)
     }
 }

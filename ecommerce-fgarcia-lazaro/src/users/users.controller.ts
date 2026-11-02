@@ -1,34 +1,59 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Users } from './users.interface';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { ChangePasswordDto, CreateUserDto, UpdateUserDto } from './dto/users.dto';
 
 @Controller('users')
 export class UsersController {
     constructor(private readonly usersService: UsersService){}
     @Get()
-    getAllUsers(){
-        return this.usersService.getAllUsers();
+    @UseGuards(AuthGuard)
+    getAllUsers(@Query("page") page?: String, @Query("limit") limit?: String): Promise<Omit<Users, "password">[]>{
+        const pageNumber = Number(page)
+        const limitNumber = Number(limit)
+
+        const validPage = !isNaN(pageNumber) && pageNumber > 0 ? pageNumber : 1;
+        const validLimit = !isNaN(limitNumber) && limitNumber > 0 ? limitNumber : 5 ;
+
+
+        return this.usersService.getAllUsers(validPage, validLimit);
 
     }
 
+    @Get('seeder')
+    addUsers() {
+        return this.usersService.addUsers()
+    }
+
     @Get(":id")
-    getUserById(@Param("id") id: string) {
+    @UseGuards(AuthGuard)
+    getUserById(@Param("id", ParseUUIDPipe) id: string) {
         return this.usersService.getUserById(id)
     }
 
     @Post()
-    createNewUser(@Body() user: any){
-        this.usersService.createNewUser(user)
+    createNewUser(@Body() user: CreateUserDto){
+        
+      return  this.usersService.createNewUser(user)
     }
 
     @Put(":id")
-    updateProfile(@Param("id") id: string, @Body() userProfileUpdate:any){
-        this.usersService.updateProfile(id, userProfileUpdate)
+    @UseGuards(AuthGuard)
+    updateProfile(@Param("id", ParseUUIDPipe) id: string, @Body() userProfileUpdate: UpdateUserDto){
+      return  this.usersService.updateProfile(id, userProfileUpdate)
+    }
+
+    @Put(":id/password")
+    @UseGuards(AuthGuard)
+    changePassword(@Param("id", ParseUUIDPipe) id: string, @Body() passwords: ChangePasswordDto){
+      return  this.usersService.changePassword(id, passwords)
     }
 
     @Delete(":id")
-    deleteUserById(@Param("id") id: string){
-        this.usersService.deleteUserById(id)
+    @UseGuards(AuthGuard)
+    deleteUserById(@Param("id", ParseUUIDPipe) id: string){
+       return this.usersService.deleteUserById(id)
     }
 
 }

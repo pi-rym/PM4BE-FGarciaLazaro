@@ -1,34 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { OrderService } from './order.service';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { OrdersService } from './order.service';
+import { CreateOrderDto } from './dto/order.dto';
 
-@Controller('order')
-export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
-
-  @Post()
-  create(@Body() createOrderDto: CreateOrderDto) {
-    return this.orderService.create(createOrderDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.orderService.findAll();
-  }
+@Controller('orders')
+export class OrdersController {
+  constructor(private readonly orderService: OrdersService) {}
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.orderService.findOne(+id);
+  getOrderById(@Param('id', ParseUUIDPipe) id: string) {
+    return this.orderService.getOrderById(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
-    return this.orderService.update(+id, updateOrderDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.orderService.remove(+id);
+  @Post()
+  addOrder(@Body() newOrderData: CreateOrderDto) {
+    return this.orderService.addOrder(newOrderData);
   }
 }

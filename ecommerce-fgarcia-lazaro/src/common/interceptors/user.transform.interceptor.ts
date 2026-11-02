@@ -1,7 +1,7 @@
-import { Injectable, NestInterceptor } from "@nestjs/common";
+// import { Injectable, NestInterceptor } from "@nestjs/common";
 
 
-@Injectable()
-export class ExcludeFieldsInterceptor implements NestInterceptor {
+// @Injectable()
+// export class ExcludeFieldsInterceptor implements NestInterceptor {
     
-}
+// }
